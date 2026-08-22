@@ -8,6 +8,7 @@ import {
   Settings,
   LogOut,
   Menu,
+  PenLine,
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -21,8 +22,10 @@ const Sidebar = () => {
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
-        <span className="logo-mark">✦</span>
-        <span>Notes</span>
+        <span className="logo-mark">
+           <PenLine size={19} />
+        </span>
+        <span>Jot</span>
         <button
           type="button"
           className="mobile-menu-button"
