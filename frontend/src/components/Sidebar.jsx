@@ -11,28 +11,35 @@ import {
   PenLine,
 } from "lucide-react";
 
-const Sidebar = () => {
+const Sidebar = ({ activeTab, onTabChange }) => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleTabChange = (tab) => {
+    onTabChange(tab);
+    setIsMobileMenuOpen(false);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/login");
   };
+
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
         <span className="logo-mark">
-           <PenLine size={19} />
+          <PenLine size={19} />
         </span>
+
         <span>Jot</span>
+
         <button
           type="button"
           className="mobile-menu-button"
           aria-label="Open navigation menu"
-          onClick={() => {
-            setIsMobileMenuOpen(true);
-          }}
+          onClick={() => setIsMobileMenuOpen(true)}
         >
           <Menu size={20} />
         </button>
@@ -42,22 +49,46 @@ const Sidebar = () => {
         <div className="nav-section">
           <p className="nav-section-title">Workspace</p>
 
-          <button className="nav-item active">
+          <button
+            type="button"
+            className={`nav-item ${
+              activeTab === "dashboard" ? "active" : ""
+            }`}
+            onClick={() => handleTabChange("dashboard")}
+          >
             <LayoutDashboard className="nav-icon" size={18} />
             <span>Dashboard</span>
           </button>
 
-          <button className="nav-item">
+          <button
+            type="button"
+            className={`nav-item ${
+              activeTab === "all" ? "active" : ""
+            }`}
+            onClick={() => handleTabChange("all")}
+          >
             <FileText className="nav-icon" size={18} />
             <span>All Notes</span>
           </button>
 
-          <button className="nav-item">
+          <button
+            type="button"
+            className={`nav-item ${
+              activeTab === "favorites" ? "active" : ""
+            }`}
+            onClick={() => handleTabChange("favorites")}
+          >
             <Star className="nav-icon" size={18} />
             <span>Favorites</span>
           </button>
 
-          <button className="nav-item">
+          <button
+            type="button"
+            className={`nav-item ${
+              activeTab === "shared" ? "active" : ""
+            }`}
+            onClick={() => handleTabChange("shared")}
+          >
             <Users className="nav-icon" size={18} />
             <span>Shared</span>
           </button>
@@ -65,16 +96,27 @@ const Sidebar = () => {
       </nav>
 
       <div className="sidebar-bottom">
-        <button className="nav-item">
+        <button
+          type="button"
+          className={`nav-item ${
+            activeTab === "settings" ? "active" : ""
+          }`}
+          onClick={() => handleTabChange("settings")}
+        >
           <Settings className="nav-icon" size={18} />
           <span>Settings</span>
         </button>
 
-        <button className="nav-item logout" onClick={handleLogout}>
+        <button
+          type="button"
+          className="nav-item logout"
+          onClick={handleLogout}
+        >
           <LogOut className="nav-icon" size={18} />
           <span>Logout</span>
         </button>
       </div>
+
       {isMobileMenuOpen && (
         <div
           className="mobile-menu-overlay"
@@ -100,8 +142,10 @@ const Sidebar = () => {
             <nav className="mobile-menu-nav">
               <button
                 type="button"
-                className="mobile-menu-item active"
-                onClick={() => setIsMobileMenuOpen(false)}
+                className={`mobile-menu-item ${
+                  activeTab === "dashboard" ? "active" : ""
+                }`}
+                onClick={() => handleTabChange("dashboard")}
               >
                 <LayoutDashboard size={18} />
                 <span>Dashboard</span>
@@ -109,8 +153,10 @@ const Sidebar = () => {
 
               <button
                 type="button"
-                className="mobile-menu-item"
-                onClick={() => setIsMobileMenuOpen(false)}
+                className={`mobile-menu-item ${
+                  activeTab === "all" ? "active" : ""
+                }`}
+                onClick={() => handleTabChange("all")}
               >
                 <FileText size={18} />
                 <span>All Notes</span>
@@ -118,8 +164,10 @@ const Sidebar = () => {
 
               <button
                 type="button"
-                className="mobile-menu-item"
-                onClick={() => setIsMobileMenuOpen(false)}
+                className={`mobile-menu-item ${
+                  activeTab === "favorites" ? "active" : ""
+                }`}
+                onClick={() => handleTabChange("favorites")}
               >
                 <Star size={18} />
                 <span>Favorites</span>
@@ -127,8 +175,10 @@ const Sidebar = () => {
 
               <button
                 type="button"
-                className="mobile-menu-item"
-                onClick={() => setIsMobileMenuOpen(false)}
+                className={`mobile-menu-item ${
+                  activeTab === "shared" ? "active" : ""
+                }`}
+                onClick={() => handleTabChange("shared")}
               >
                 <Users size={18} />
                 <span>Shared</span>
@@ -136,8 +186,10 @@ const Sidebar = () => {
 
               <button
                 type="button"
-                className="mobile-menu-item"
-                onClick={() => setIsMobileMenuOpen(false)}
+                className={`mobile-menu-item ${
+                  activeTab === "settings" ? "active" : ""
+                }`}
+                onClick={() => handleTabChange("settings")}
               >
                 <Settings size={18} />
                 <span>Settings</span>

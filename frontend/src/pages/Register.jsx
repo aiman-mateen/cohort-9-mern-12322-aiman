@@ -5,7 +5,7 @@ import {
   EyeOff,
   LockKeyhole,
   Mail,
-  NotebookPen,
+  Pencil,
   User,
   X,
 } from "lucide-react";
@@ -95,9 +95,9 @@ const Register = () => {
       <section className="auth-card">
         <div className="auth-brand">
           <span className="auth-logo">
-            <NotebookPen size={18} />
+            <Pencil size={18} />
           </span>
-          <span>Notes</span>
+          <span>Jot</span>
         </div>
 
         <div className="auth-header">

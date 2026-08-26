@@ -13,6 +13,17 @@ const noteSchema = new mongoose.Schema(
       required: true,
     },
 
+    category: {
+      type: String,
+      default: "Personal",
+      trim: true,
+    },
+
+    isFavorite: {
+      type: Boolean,
+      default: false,
+    },
+    
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

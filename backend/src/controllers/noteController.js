@@ -3,7 +3,7 @@ const Note = require("../models/Note");
 // Create a note
 const createNote = async (req, res) => {
   try {
-    const { title, content } = req.body;
+    const { title, content, category, isFavorite } = req.body;
 
     if (!title || !content) {
       return res.status(400).json({
@@ -14,6 +14,8 @@ const createNote = async (req, res) => {
     const note = await Note.create({
       title,
       content,
+      category,
+      isFavorite,
       user: req.user,
     });
 
@@ -72,7 +74,7 @@ const getNote = async (req, res) => {
 // Update a note
 const updateNote = async (req, res) => {
   try {
-    const { title, content } = req.body;
+    const { title, content, category, isFavorite } = req.body;
 
     const note = await Note.findOne({
       _id: req.params.id,
@@ -91,6 +93,14 @@ const updateNote = async (req, res) => {
 
     if (content !== undefined) {
       note.content = content;
+    }
+
+    if (category !== undefined) {
+      note.category = category;
+    }
+
+    if (isFavorite !== undefined) {
+      note.isFavorite = isFavorite;
     }
 
     await note.save();
