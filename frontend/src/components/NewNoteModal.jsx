@@ -9,6 +9,10 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
   const [title, setTitle] = useState(note?.title || "");
   const [category, setCategory] = useState(note?.category || "Personal");
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [errors, setErrors] = useState({
+    title: "",
+    content: "",
+  });
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -24,7 +28,24 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
       },
     },
   });
+ useEffect(() => {
+  if (!editor) return;
 
+  const handleEditorUpdate = () => {
+    if (errors.content) {
+      setErrors((previous) => ({
+        ...previous,
+        content: "",
+      }));
+    }
+  };
+
+  editor.on("update", handleEditorUpdate);
+
+  return () => {
+    editor.off("update", handleEditorUpdate);
+  };
+}, [editor, errors.content]);
   const editorState = useEditorState({
       editor,
       selector: ({ editor }) => ({
@@ -47,71 +68,100 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
     }
   }, [note, editor]);
 
-  useEffect(() => {
-    if (!editor || category === "To-Do") return;
+  
+ const handleCategoryChange = (newCategory) => {
+    // Do nothing to the editor if the user selects the same category.
+    if (newCategory === category) {
+      setCategoryOpen(false);
+      return;
+    }
 
-    const { doc } = editor.state;
+    // Only convert checklist → bullet list when the user
+    // explicitly changes FROM To-Do to another category.
+    if (category === "To-Do" && newCategory !== "To-Do" && editor) {
+      const { doc } = editor.state;
+      const taskListNodes = [];
 
-    const taskListNodes = [];
-
-    doc.descendants((node, pos) => {
-      if (node.type.name === "taskList") {
-        taskListNodes.push({ node, pos });
-      }
-    });
-
-    if (taskListNodes.length === 0) return;
-
-    editor.commands.command(({ tr, state }) => {
-      taskListNodes.reverse().forEach(({ node, pos }) => {
-        const paragraphNodes = [];
-
-        node.forEach((taskItem) => {
-          taskItem.forEach((child) => {
-            paragraphNodes.push(child);
-          });
-        });
-
-        tr.replaceWith(
-          pos,
-          pos + node.nodeSize,
-          paragraphNodes
-        );
+      doc.descendants((node, pos) => {
+        if (node.type.name === "taskList") {
+          taskListNodes.push({ node, pos });
+        }
       });
 
-      return true;
-    });
-  }, [category, editor]);
+      editor.commands.command(({ tr, state }) => {
+        taskListNodes.reverse().forEach(({ node, pos }) => {
+          const listItems = [];
+
+          node.forEach((taskItem) => {
+            taskItem.forEach((child) => {
+              if (child.type.name === "paragraph") {
+                listItems.push(
+                  state.schema.nodes.listItem.create(
+                    null,
+                    child
+                  )
+                );
+              }
+            });
+          });
+
+          if (listItems.length > 0) {
+            const bulletList = state.schema.nodes.bulletList.create(
+              null,
+              listItems
+            );
+
+            tr.replaceWith(
+              pos,
+              pos + node.nodeSize,
+              bulletList
+            );
+          }
+        });
+
+        return true;
+      });
+    }
+
+    setCategory(newCategory);
+    setCategoryOpen(false);
+  };
 
   const handleSubmit = (event) => {
-  event.preventDefault();
+    event.preventDefault();
 
-  console.log("SUBMIT FIRED");
-  console.log("Title:", title);
-  console.log("Editor:", editor);
-  console.log("Editor HTML:", editor?.getHTML());
-  console.log("Editor empty:", editor?.isEmpty);
+    const newErrors = {
+      title: "",
+      content: "",
+    };
 
-  if (!title.trim()) {
-    console.log("RETURNED: title is empty");
-    return;
-  }
+    if (!title.trim()) {
+      newErrors.title = "Please enter a title.";
+    }
 
-  const content = editor?.getHTML() || "";
+    let content = editor?.getHTML() || "";
+    content = content.replace(/<p><br><\/p>/g, "").trim();
 
-  if (!content || content === "<p></p>") {
-    console.log("RETURNED: content is empty");
-    return;
-  }
+    if (!content || content === "<p></p>") {
+      newErrors.content = "Please enter some content.";
+    }
 
-  console.log("CALLING onCreate");
+    if (newErrors.title || newErrors.content) {
+      setErrors(newErrors);
+      return;
+    }
 
-  onCreate({
-    title: title.trim(),
-    content,
-    category,
-  });
-};
+    setErrors({
+      title: "",
+      content: "",
+    });
+
+    onCreate({
+      title: title.trim(),
+      content,
+      category,
+    });
+  };
 
   return (
     <div className="modal-overlay" onMouseDown={onClose}>
@@ -148,9 +198,26 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
                 type="text"
                 placeholder="Give your note a title"
                 value={title}
-                onChange={(event) => setTitle(event.target.value)}
+                onChange={(event) => {
+                  setTitle(event.target.value);
+
+                  if (errors.title) {
+                    setErrors((previous) => ({
+                      ...previous,
+                      title: "",
+                    }));
+                  }
+                }}
+                aria-invalid={Boolean(errors.title)}
+                aria-describedby={errors.title ? "note-title-error" : undefined}
                 autoFocus
               />
+
+              {errors.title && (
+                <p id="note-title-error" className="form-error" role="alert">
+                  {errors.title}
+                </p>
+              )}
             </div>
 
             <div className="form-group category-group">
@@ -189,8 +256,7 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
                             category === option ? "selected" : ""
                           }`}
                           onClick={() => {
-                            setCategory(option);
-                            setCategoryOpen(false);
+                            handleCategoryChange(option)
                           }}
                           role="option"
                           aria-selected={category === option}
@@ -293,7 +359,13 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
                 </>
               )}
             </div>
+            {errors.content && (
+              <p className="form-error" role="alert">
+                {errors.content}
+              </p>
+            )}
           </div>
+          
 
           
 

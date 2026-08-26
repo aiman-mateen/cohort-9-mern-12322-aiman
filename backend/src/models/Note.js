@@ -13,8 +13,9 @@ const noteSchema = new mongoose.Schema(
       required: true,
     },
 
-    category: {
+   category: {
       type: String,
+      enum: ["Personal", "Work", "Study", "Ideas", "To-Do", "Reminders"],
       default: "Personal",
       trim: true,
     },

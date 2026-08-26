@@ -26,8 +26,6 @@ const Login = () => {
     localStorage.setItem("token", data.token);
     localStorage.setItem("user", JSON.stringify(data.user));
 
-    console.log("Login successful:", data);
-
     navigate("/dashboard");
   } catch (error) {
     setError(error.message);
@@ -93,7 +91,7 @@ const Login = () => {
             </div>
 
           {error && (
-            <p className="field-error auth-error">
+            <p className="field-error auth-error" role="alert">
               {error}
             </p>
           )}

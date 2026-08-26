@@ -31,7 +31,10 @@ const NoteCard = ({
 
       <div className="note-card-content">
         <h3>{title}</h3>
-        <p dangerouslySetInnerHTML={{ __html: content,}}/>
+        <div
+          className="note-card-preview"
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
       </div>
 
       <div className="note-card-footer">

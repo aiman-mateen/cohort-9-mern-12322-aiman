@@ -1,5 +1,6 @@
 import "../App.css";
-import { Plus, ArrowUpDown, Pencil, Trash2, Heart } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Plus, ArrowUpDown, Pencil, Trash2, Heart, Users, Settings } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import NoteCard from "../components/NoteCard";
@@ -16,6 +17,11 @@ function Dashboard() {
     const [user, setUser] = useState(null);
     const [notes, setNotes] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
+    const location = useLocation();
+    const navigate = useNavigate();
+    const currentPath = location.pathname;
+    const isSharedPage = currentPath === "/dashboard/shared";
+    const isSettingsPage = currentPath === "/dashboard/settings"; 
     const [activeTab, setActiveTab] = useState("dashboard");
     const [sortOption, setSortOption] = useState("newest");
     const [isSortOpen, setIsSortOpen] = useState(false);
@@ -31,24 +37,25 @@ function Dashboard() {
     const [darkMode, setDarkMode] = useState(
       localStorage.getItem("theme") === "dark"
     );
+
     
 
     const filteredNotes = notes.filter((note) => {
-      const query = searchQuery.trim().toLowerCase();
+    const query = searchQuery.trim().toLowerCase();
 
-      const matchesSearch =
-        !query ||
-        note.title.toLowerCase().includes(query) ||
-        note.content.toLowerCase().includes(query);
+    const matchesSearch =
+      !query ||
+      note.title.toLowerCase().includes(query) ||
+      note.content.toLowerCase().includes(query);
 
-      const matchesTab =
-        activeTab === "dashboard" ||
-        activeTab === "all" ||
-        (activeTab === "favorites" && note.isFavorite) ||
-        activeTab === note.category;
-      
-        return matchesSearch && matchesTab;
-    });
+   const matchesTab =
+    activeTab === "dashboard" ||
+    activeTab === "all" ||
+    (activeTab === "favorites" && note.isFavorite) ||
+    activeTab === note.category;
+
+    return matchesSearch && matchesTab;
+  });
     
       const sortedNotes = [...filteredNotes].sort((a, b) => {
         if (sortOption === "oldest") {
@@ -70,8 +77,15 @@ function Dashboard() {
       useEffect(() => {
         const storedUser = localStorage.getItem("user");
 
-        if (storedUser) {
+        if (!storedUser) {
+          return;
+        }
+
+        try {
           setUser(JSON.parse(storedUser));
+        } catch (error) {
+          console.error("Invalid user data in localStorage:", error);
+          localStorage.removeItem("user");
         }
       }, []);
     
@@ -101,7 +115,6 @@ function Dashboard() {
 
       try {
         const data = await getNotes(token);
-        console.log("Fetched notes:", data);
         setNotes(data);
         setError("");
         
@@ -515,9 +528,29 @@ const confirmDeleteNote = async () => {
               </div>
             </div>
           </section>
-        ) : (
-          <>
-           <section className="dashboard-header">
+        ) : isSharedPage ? (
+            <section className="placeholder-page">
+              <div className="placeholder-page-content">
+                <Users size={32} />
+                <h1>Shared Notes</h1>
+                <p>
+                  Notes shared with you will appear here.
+                </p>
+              </div>
+            </section>
+          ) : isSettingsPage ? (
+            <section className="placeholder-page">
+              <div className="placeholder-page-content">
+                <Settings size={32} />
+                <h1>Settings</h1>
+                <p>
+                  Account and application settings will appear here.
+                </p>
+              </div>
+            </section>
+          ) : (
+        <>
+        <section className="dashboard-header">
           <div>
             <p className="dashboard-eyebrow">Your workspace</p>
 
@@ -540,46 +573,58 @@ const confirmDeleteNote = async () => {
         <div className="notes-toolbar">
           <div className="note-tabs">
             <button
-              className={`note-tab ${
-                activeTab === "dashboard" ? "active" : ""
-              }`}
-              onClick={() => setActiveTab("dashboard")}
-            >
-              Home
-            </button>
+            className={`note-tab ${
+              activeTab === "dashboard" ? "active" : ""
+            }`}
+            onClick={() => {
+              setActiveTab("dashboard");
+              navigate("/dashboard");
+            }}
+          >
+            Home
+          </button>
 
             <button
               className={`note-tab ${
                 activeTab === "favorites" ? "active" : ""
               }`}
-              onClick={() => setActiveTab("favorites")}
+              onClick={() => {setActiveTab("favorites"); navigate("/dashboard/favorites")}}
             >
               Favorites
             </button>
 
             <button
-              className={`note-tab ${
-                activeTab === "Personal" ? "active" : ""
-              }`}
-              onClick={() => setActiveTab("Personal")}
-            >
-              Personal
-            </button>
+            className={`note-tab ${
+              activeTab === "Personal" ? "active" : ""
+            }`}
+            onClick={() => {
+              setActiveTab("Personal");
+              navigate("/dashboard");
+            }}
+          >
+            Personal
+          </button>
 
             <button
-              className={`note-tab ${
-                activeTab === "Work" ? "active" : ""
-              }`}
-              onClick={() => setActiveTab("Work")}
-            >
-              Work
-            </button>
+            className={`note-tab ${
+              activeTab === "Work" ? "active" : ""
+            }`}
+            onClick={() => {
+              setActiveTab("Work");
+              navigate("/dashboard");
+            }}
+          >
+            Work
+          </button>
 
             <button
               className={`note-tab ${
                 activeTab === "Study" ? "active" : ""
               }`}
-              onClick={() => setActiveTab("Study")}
+              onClick={() => {
+                setActiveTab("Study");
+                navigate("/dashboard");
+              }}
             >
               Study
             </button>
@@ -588,7 +633,10 @@ const confirmDeleteNote = async () => {
               className={`note-tab ${
                 activeTab === "Ideas" ? "active" : ""
               }`}
-              onClick={() => setActiveTab("Ideas")}
+              onClick={() => {
+                setActiveTab("Ideas");
+                navigate("/dashboard");
+              }}
             >
               Ideas
             </button>
@@ -597,7 +645,10 @@ const confirmDeleteNote = async () => {
               className={`note-tab ${
                 activeTab === "To-Do" ? "active" : ""
               }`}
-              onClick={() => setActiveTab("To-Do")}
+              onClick={() => {
+                setActiveTab("To-Do");
+                navigate("/dashboard");
+              }}
             >
               To-Do
             </button>
@@ -606,7 +657,10 @@ const confirmDeleteNote = async () => {
               className={`note-tab ${
                 activeTab === "Reminders" ? "active" : ""
               }`}
-              onClick={() => setActiveTab("Reminders")}
+              onClick={() => {
+                setActiveTab("Reminders");
+                navigate("/dashboard");
+              }}
             >
               Reminders
             </button>

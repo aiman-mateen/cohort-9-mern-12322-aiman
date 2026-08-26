@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import {
   LayoutDashboard,
@@ -12,12 +12,25 @@ import {
 } from "lucide-react";
 
 const Sidebar = ({ activeTab, onTabChange }) => {
+  const location = useLocation();
   const navigate = useNavigate();
+  const currentPath = location.pathname;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleTabChange = (tab) => {
     onTabChange(tab);
     setIsMobileMenuOpen(false);
+      if (tab === "dashboard") {
+          navigate("/dashboard");
+        } else if (tab === "all") {
+          navigate("/dashboard/all");
+        } else if (tab === "favorites") {
+          navigate("/dashboard/favorites");
+        } else if (tab === "shared") {
+          navigate("/dashboard/shared");
+        } else if (tab === "settings") {
+          navigate("/dashboard/settings");
+        }  
   };
 
   const handleLogout = () => {
@@ -52,7 +65,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
           <button
             type="button"
             className={`nav-item ${
-              activeTab === "dashboard" ? "active" : ""
+              currentPath === "/dashboard" ? "active" : ""
             }`}
             onClick={() => handleTabChange("dashboard")}
           >
@@ -63,7 +76,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
           <button
             type="button"
             className={`nav-item ${
-              activeTab === "all" ? "active" : ""
+              currentPath === "/dashboard/all" ? "active" : ""
             }`}
             onClick={() => handleTabChange("all")}
           >
@@ -74,7 +87,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
           <button
             type="button"
             className={`nav-item ${
-              activeTab === "favorites" ? "active" : ""
+              currentPath === "/dashboard/favorites" ? "active" : ""
             }`}
             onClick={() => handleTabChange("favorites")}
           >
@@ -85,7 +98,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
           <button
             type="button"
             className={`nav-item ${
-              activeTab === "shared" ? "active" : ""
+              currentPath === "/dashboard/shared" ? "active" : ""
             }`}
             onClick={() => handleTabChange("shared")}
           >
@@ -99,7 +112,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
         <button
           type="button"
           className={`nav-item ${
-            activeTab === "settings" ? "active" : ""
+            currentPath === "/dashboard/settings" ? "active" : ""
           }`}
           onClick={() => handleTabChange("settings")}
         >
