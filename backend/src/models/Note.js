@@ -13,6 +13,18 @@ const noteSchema = new mongoose.Schema(
       required: true,
     },
 
+   category: {
+      type: String,
+      enum: ["Personal", "Work", "Study", "Ideas", "To-Do", "Reminders"],
+      default: "Personal",
+      trim: true,
+    },
+
+    isFavorite: {
+      type: Boolean,
+      default: false,
+    },
+    
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

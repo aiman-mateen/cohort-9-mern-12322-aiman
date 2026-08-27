@@ -1,19 +1,58 @@
 const Note = require("../models/Note");
+const sanitizeHtml = require("sanitize-html");
 
+
+const sanitizeNoteContent = (content) =>
+  sanitizeHtml(content, {
+    allowedTags: [
+      "p",
+      "br",
+      "strong",
+      "em",
+      "s",
+      "code",
+      "pre",
+      "h1",
+      "h2",
+      "h3",
+      "blockquote",
+      "ul",
+      "ol",
+      "li",
+      "label",
+      "input",
+      "div",
+      "span",
+    ],
+    allowedAttributes: {
+      input: ["type", "checked", "disabled"],
+      ul: ["data-type"],
+      li: ["data-type", "data-checked"],
+    },
+  });
+
+  const sanitizeTitle = (title) =>
+    sanitizeHtml(title.trim(), {
+      allowedTags: [],
+      allowedAttributes: {},
+    });
+  
 // Create a note
 const createNote = async (req, res) => {
   try {
-    const { title, content } = req.body;
+    const { title, content, category, isFavorite } = req.body;
 
-    if (!title || !content) {
+    if (!title?.trim() || !content?.trim()) {
       return res.status(400).json({
         message: "Title and content are required",
       });
     }
 
     const note = await Note.create({
-      title,
-      content,
+      title: sanitizeTitle(title),
+      content: sanitizeNoteContent(content),
+      category,
+      isFavorite,
       user: req.user,
     });
 
@@ -72,7 +111,7 @@ const getNote = async (req, res) => {
 // Update a note
 const updateNote = async (req, res) => {
   try {
-    const { title, content } = req.body;
+    const { title, content, category, isFavorite } = req.body;
 
     const note = await Note.findOne({
       _id: req.params.id,
@@ -86,11 +125,19 @@ const updateNote = async (req, res) => {
     }
 
     if (title !== undefined) {
-      note.title = title;
+      note.title = sanitizeTitle(title);
     }
 
     if (content !== undefined) {
-      note.content = content;
+      note.content = sanitizeNoteContent(content);
+    }
+
+    if (category !== undefined) {
+      note.category = category;
+    }
+
+    if (isFavorite !== undefined) {
+      note.isFavorite = isFavorite;
     }
 
     await note.save();

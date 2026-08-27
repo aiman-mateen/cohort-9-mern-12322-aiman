@@ -1,4 +1,4 @@
-import { Eye, EyeOff, LockKeyhole, Mail, NotebookPen } from "lucide-react";
+import { Eye, EyeOff, LockKeyhole, Mail, Pencil } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../services/authService";
@@ -26,8 +26,6 @@ const Login = () => {
     localStorage.setItem("token", data.token);
     localStorage.setItem("user", JSON.stringify(data.user));
 
-    console.log("Login successful:", data);
-
     navigate("/dashboard");
   } catch (error) {
     setError(error.message);
@@ -40,9 +38,9 @@ const Login = () => {
       <section className="auth-card">
         <div className="auth-brand">
           <span className="auth-logo">
-            <NotebookPen size={18} />
+            <Pencil size={18} />
           </span>
-          <span>Notes</span>
+          <span>Jot</span>
         </div>
 
         <div className="auth-header">
@@ -92,6 +90,11 @@ const Login = () => {
             </div>
             </div>
 
+          {error && (
+            <p className="field-error auth-error" role="alert">
+              {error}
+            </p>
+          )}
           <button type="submit" className="auth-submit">
             Sign In
           </button>
