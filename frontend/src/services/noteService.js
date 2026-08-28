@@ -61,15 +61,25 @@ export const getNotes = async (token) => {
   return data.notes;
 };
 
-export const createNote = async (noteData, token) => {
-  const data = await request(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(noteData),
-  });
+export const createNote = async (noteData) => {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(
+    "http://localhost:5000/api/notes",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: noteData,
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to create note");
+  }
 
   return data.note;
 };
@@ -85,15 +95,73 @@ export const deleteNote = async (noteId, token) => {
   return data;
 };
 
-export const updateNote = async (noteId, noteData, token) => {
-  const data = await request(`${API_URL}/${noteId}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(noteData),
-  });
+export const updateNote = async (id, noteData) => {
+  const token = localStorage.getItem("token");
+
+  const isFormData = noteData instanceof FormData;
+
+  const response = await fetch(
+    `http://localhost:5000/api/notes/${id}`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...(isFormData
+          ? {}
+          : {
+              "Content-Type": "application/json",
+            }),
+      },
+      body: isFormData
+        ? noteData
+        : JSON.stringify(noteData),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || "Failed to update note"
+    );
+  }
 
   return data.note;
+};
+
+export const shareNote = async (noteId, email) => {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(
+    `http://localhost:5000/api/notes/${noteId}/share`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to share note");
+  }
+
+  return data;
+};
+
+export const getSharedNotes = async () => {
+  const token = localStorage.getItem("token");
+
+  const data = await request(`${API_URL}/shared`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return data.notes;
 };

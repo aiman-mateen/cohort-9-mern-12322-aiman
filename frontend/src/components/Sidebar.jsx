@@ -18,7 +18,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleTabChange = (tab) => {
-    onTabChange(tab);
+    onTabChange?.(tab);
     setIsMobileMenuOpen(false);
       if (tab === "dashboard") {
           navigate("/dashboard");
@@ -27,9 +27,9 @@ const Sidebar = ({ activeTab, onTabChange }) => {
         } else if (tab === "favorites") {
           navigate("/dashboard/favorites");
         } else if (tab === "shared") {
-          navigate("/dashboard/shared");
+          navigate("/shared");
         } else if (tab === "settings") {
-          navigate("/dashboard/settings");
+          navigate("/settings");
         }  
   };
 
@@ -98,7 +98,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
           <button
             type="button"
             className={`nav-item ${
-              currentPath === "/dashboard/shared" ? "active" : ""
+              currentPath === "/shared" ? "active" : ""
             }`}
             onClick={() => handleTabChange("shared")}
           >
@@ -112,7 +112,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
         <button
           type="button"
           className={`nav-item ${
-            currentPath === "/dashboard/settings" ? "active" : ""
+            currentPath === "/settings" ? "active" : ""
           }`}
           onClick={() => handleTabChange("settings")}
         >

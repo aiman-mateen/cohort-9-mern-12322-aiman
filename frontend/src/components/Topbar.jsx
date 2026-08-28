@@ -1,8 +1,10 @@
 import { Bell, Search, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Topbar = ({ searchQuery, onSearchChange, darkMode, onToggleTheme }) => {
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -42,7 +44,7 @@ const Topbar = ({ searchQuery, onSearchChange, darkMode, onToggleTheme }) => {
           <Bell size={18} />
         </button>
 
-        <button className="profile-button">
+        <button type="button" className="profile-button" onClick={() => navigate("/profile")}>
           <span className="profile-avatar">{userInitial}</span>
           <span className="profile-info">
             <span className="profile-name">{userName}</span>

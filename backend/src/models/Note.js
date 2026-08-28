@@ -13,7 +13,7 @@ const noteSchema = new mongoose.Schema(
       required: true,
     },
 
-   category: {
+    category: {
       type: String,
       enum: ["Personal", "Work", "Study", "Ideas", "To-Do", "Reminders"],
       default: "Personal",
@@ -24,12 +24,24 @@ const noteSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    
+
+    image: {
+      type: String,
+      default: "",
+    },
+
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
+
+    sharedWith: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   {
     timestamps: true,
