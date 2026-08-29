@@ -13,28 +13,28 @@ const Shared = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sharedNotes, setSharedNotes] = useState([]);
   const [selectedNote, setSelectedNote] = useState(null);
-
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const [darkMode, setDarkMode] = useState(
     localStorage.getItem("theme") === "dark"
   );
 
+  useEffect(() => {
+  document.documentElement.setAttribute(
+    "data-theme",
+    darkMode ? "dark" : "light"
+  );
+
+  localStorage.setItem(
+    "theme",
+    darkMode ? "dark" : "light"
+  );
+}, [darkMode]);
+
+
+  const [error, setError] = useState("");
+
   const toggleTheme = () => {
-    setDarkMode((prev) => {
-      const newValue = !prev;
-
-      localStorage.setItem(
-        "theme",
-        newValue ? "dark" : "light"
-      );
-
-      document.documentElement.setAttribute(
-        "data-theme",
-        newValue ? "dark" : "light"
-      );
-
-      return newValue;
-    });
-  };
+    setDarkMode((prev) => !prev);};
 
   useEffect(() => {
     const fetchSharedNotes = async () => {
@@ -161,7 +161,7 @@ const Shared = () => {
               {selectedNote.image && (
                 <div className="opened-note-image">
                   <img
-                    src={`http://localhost:5000${selectedNote.image}`}
+                    src={`${API_URL}${selectedNote.image}`}
                     alt={selectedNote.title}
                   />
                 </div>
@@ -189,7 +189,18 @@ const Shared = () => {
               </div>
             </div>
 
-            {filteredSharedNotes.length === 0 ? (
+            {error ? (
+  <div className="notes-state">
+    <p>{error}</p>
+    <button
+      type="button"
+      className="modal-create"
+      onClick={fetchSharedNotes}
+    >
+      Retry
+    </button>
+  </div>
+) : filteredSharedNotes.length === 0 ? (
               <div className="shared-empty-state">
                 <div className="shared-empty-icon">
                   <Users size={32} />

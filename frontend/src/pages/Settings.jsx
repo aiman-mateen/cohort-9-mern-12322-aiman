@@ -1,6 +1,6 @@
 import "../App.css";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 
@@ -17,19 +17,20 @@ const Settings = () => {
     localStorage.getItem("theme") === "dark"
   );
 
+  useEffect(() => {
+  document.documentElement.setAttribute(
+    "data-theme",
+    darkMode ? "dark" : "light"
+  );
+
+  localStorage.setItem(
+    "theme",
+    darkMode ? "dark" : "light"
+  );
+}, [darkMode]);
+
   const toggleTheme = () => {
-    setDarkMode((prev) => {
-      const newValue = !prev;
-
-      localStorage.setItem("theme", newValue ? "dark" : "light");
-
-      document.documentElement.setAttribute(
-        "data-theme",
-        newValue ? "dark" : "light"
-      );
-
-      return newValue;
-    });
+    setDarkMode((prev) => !prev);
   };
 
   return (

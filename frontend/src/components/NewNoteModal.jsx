@@ -19,10 +19,13 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
   const [imagePreview, setImagePreview] = useState(note?.image || "");
   const [imageError, setImageError] = useState("");
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [removeImage, setRemoveImage] = useState(false);
   const [errors, setErrors] = useState({
     title: "",
     content: "",
   });
+  const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -75,10 +78,11 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
     setImage(null);
     setImagePreview(
       note?.image
-        ? `http://localhost:5000${note.image}`
+        ? `${API_URL}${note.image}`
         : ""
     );
     setImageError("");
+    setRemoveImage(false);
 
     if (editor) {
       editor.commands.setContent(note?.content || "");
@@ -217,6 +221,10 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
 
     if (image) {
       formData.append("image", image);
+    }
+
+    if (removeImage) {
+      formData.append("removeImage", "true");
     }
 
     onCreate(formData);
@@ -458,6 +466,7 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
           setImage(null);
           setImagePreview("");
           setImageError("");
+          setRemoveImage(true);
         }}
       >
         <X size={15} />

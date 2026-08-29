@@ -1,9 +1,13 @@
 const multer = require("multer");
 const path = require("path");
+const noteUploadsPath = path.join(
+  __dirname,
+  "../../uploads/notes"
+);
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/notes");
+    cb(null, noteUploadsPath);
   },
 
   filename: (req, file, cb) => {

@@ -1,12 +1,17 @@
 const multer = require("multer");
 const path = require("path");
 
+
+const uploadsPath = path.join(__dirname, "../../uploads");
+const profileUploadsPath = path.join(uploadsPath, "profile");
+const noteUploadsPath = path.join(uploadsPath, "notes");
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const folder =
       file.fieldname === "profileImage"
-        ? "uploads/profile"
-        : "uploads/notes";
+        ? profileUploadsPath
+        : noteUploadsPath;
 
     cb(null, folder);
   },

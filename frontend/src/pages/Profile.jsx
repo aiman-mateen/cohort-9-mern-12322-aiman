@@ -11,6 +11,8 @@ import Toast from "../components/Toast";
 const Profile = () => {
   const navigate = useNavigate();
 
+  const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
   const [user, setUser] = useState(null);
   const [originalName, setOriginalName] = useState("");
   const [name, setName] = useState("");
@@ -65,7 +67,7 @@ const isPasswordFormFilled =
 
       try {
         const response = await fetch(
-          "http://localhost:5000/api/auth/me",
+          `${API_URL}/api/auth/me`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -116,7 +118,7 @@ const isPasswordFormFilled =
       formData.append("profileImage", file);
 
       const response = await fetch(
-        "http://localhost:5000/api/auth/profile-image",
+        `${API_URL}/api/auth/profile-image`,
         {
           method: "PUT",
           headers: {
@@ -172,7 +174,7 @@ const isPasswordFormFilled =
     setError("");
 
     const response = await fetch(
-      "http://localhost:5000/api/auth/profile",
+      `${API_URL}/api/auth/profile`,
       {
         method: "PUT",
         headers: {
@@ -232,8 +234,8 @@ const isPasswordFormFilled =
 
   if (!newPassword.trim()) {
     errors.new = "New password is required.";
-  } else if (newPassword.length < 6) {
-    errors.new = "Password must be at least 6 characters.";
+  } else if (newPassword.length < 8) {
+    errors.new = "Password must be at least 8 characters.";
   }
 
   if (!confirmPassword.trim()) {
@@ -259,7 +261,7 @@ const isPasswordFormFilled =
     setIsChangingPassword(true);
 
     const response = await fetch(
-      "http://localhost:5000/api/auth/password",
+      `${API_URL}/api/auth/password`,
       {
         method: "PUT",
         headers: {
@@ -360,11 +362,11 @@ const isPasswordFormFilled =
             </p>
           </div>
 
-          {/* {error && (
+          {error && (
             <div className="notes-state">
               <p>{error}</p>
             </div>
-          )} */}
+          )}
 
           {user && (
           <>
@@ -372,7 +374,7 @@ const isPasswordFormFilled =
               <div className="profile-avatar-large">
                 {user.profileImage ? (
                   <img
-                    src={`http://localhost:5000${user.profileImage}`}
+                   src={`${API_URL}${user.profileImage}`}
                     alt="Profile"
                   />
                 ) : (
@@ -564,9 +566,7 @@ const isPasswordFormFilled =
                     className="modal-create"
                     disabled={
                       isChangingPassword ||
-                      !currentPassword.trim() ||
-                      !newPassword.trim() ||
-                      !confirmPassword.trim()
+                      !isPasswordFormFilled
                     }
                   >
                     {isChangingPassword ? "Updating..." : "Update Password"}

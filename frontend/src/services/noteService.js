@@ -64,22 +64,13 @@ export const getNotes = async (token) => {
 export const createNote = async (noteData) => {
   const token = localStorage.getItem("token");
 
-  const response = await fetch(
-    "http://localhost:5000/api/notes",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: noteData,
-    }
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to create note");
-  }
+  const data = await request(API_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: noteData,
+  });
 
   return data.note;
 };
@@ -100,57 +91,37 @@ export const updateNote = async (id, noteData) => {
 
   const isFormData = noteData instanceof FormData;
 
-  const response = await fetch(
-    `http://localhost:5000/api/notes/${id}`,
-    {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        ...(isFormData
-          ? {}
-          : {
-              "Content-Type": "application/json",
-            }),
-      },
-      body: isFormData
-        ? noteData
-        : JSON.stringify(noteData),
-    }
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      data.message || "Failed to update note"
-    );
-  }
+  const data = await request(`${API_URL}/${id}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(isFormData
+        ? {}
+        : {
+            "Content-Type": "application/json",
+          }),
+    },
+    body: isFormData
+      ? noteData
+      : JSON.stringify(noteData),
+  });
 
   return data.note;
 };
 
+
+
 export const shareNote = async (noteId, email) => {
   const token = localStorage.getItem("token");
 
-  const response = await fetch(
-    `http://localhost:5000/api/notes/${noteId}/share`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email }),
-    }
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to share note");
-  }
-
-  return data;
+  return await request(`${API_URL}/${noteId}/share`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email }),
+  });
 };
 
 export const getSharedNotes = async () => {

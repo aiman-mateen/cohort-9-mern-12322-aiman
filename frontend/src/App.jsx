@@ -20,12 +20,13 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/dashboard/all" element={<Dashboard />} />
         <Route path="/dashboard/favorites" element={<Dashboard />} />
-
         <Route path="/profile" element={<Profile />} />
-
         <Route path="/shared" element={<Shared />} />
-
         <Route path="/settings" element={<Settings />} />
+        <Route
+          path="*"
+          element={<Navigate to="/dashboard" replace />}
+        />
       </Routes>
     </BrowserRouter>
   );

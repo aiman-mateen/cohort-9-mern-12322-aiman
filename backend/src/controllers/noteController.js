@@ -1,7 +1,8 @@
 const Note = require("../models/Note");
 const User = require("../models/User");
 const sanitizeHtml = require("sanitize-html");
-
+const fs = require("fs");
+const path = require("path");
 
 const sanitizeNoteContent = (content) =>
   sanitizeHtml(content, {
@@ -141,6 +142,21 @@ const updateNote = async (req, res) => {
     if (isFavorite !== undefined) {
       note.isFavorite = isFavorite;
     }
+
+    if (req.body.removeImage === "true" && note.image) {
+      const imagePath = path.join(
+        __dirname,
+        "../..",
+        note.image
+      );
+
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+
+      note.image = "";
+    }
+    
     if (req.file) {
       note.image = `/uploads/notes/${req.file.filename}`;
     }
