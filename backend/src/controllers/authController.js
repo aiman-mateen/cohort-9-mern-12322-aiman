@@ -124,7 +124,15 @@ const updateProfile = async (req, res) => {
 const updatePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-
+    
+    if (
+      typeof currentPassword !== "string" ||
+      typeof newPassword !== "string"
+    ) {
+      return res.status(400).json({
+        message: "Current password and new password are required",
+      });
+    }
     if (!currentPassword || !newPassword) {
       return res.status(400).json({
         message: "Current password and new password are required",

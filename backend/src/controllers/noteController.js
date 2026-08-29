@@ -143,25 +143,29 @@ const updateNote = async (req, res) => {
       note.isFavorite = isFavorite;
     }
 
-    if (req.body.removeImage === "true" && note.image) {
-      const imagePath = path.join(
-        __dirname,
-        "../..",
-        note.image
-      );
+    const oldImage = note.image;
 
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
-      }
+if (req.body.removeImage === "true" && note.image) {
+  note.image = "";
+}
 
-      note.image = "";
-    }
-    
-    if (req.file) {
-      note.image = `/uploads/notes/${req.file.filename}`;
-    }
+if (req.file) {
+  note.image = `/uploads/notes/${req.file.filename}`;
+}
 
-    await note.save();
+await note.save();
+
+if (oldImage && (req.file || req.body.removeImage === "true")) {
+  const imagePath = path.join(
+    __dirname,
+    "../..",
+    oldImage
+  );
+
+  if (fs.existsSync(imagePath)) {
+    fs.unlinkSync(imagePath);
+  }
+}
 
     res.status(200).json({
       message: "Note updated successfully",

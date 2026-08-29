@@ -182,6 +182,10 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
     setImage(file);
     setImageError("");
     setImagePreview(URL.createObjectURL(file));
+
+    if(note?.image){
+      setRemoveImage(true);
+    }
   };
 
   const handleSubmit = (event) => {
