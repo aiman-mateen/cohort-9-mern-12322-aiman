@@ -3,217 +3,239 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 
 const register = async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
+  const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({
-        message: "Name, email and password are required",
-      });
-    }
-
-    const user = await registerUser(name, email, password);
-
-    res.status(201).json({
-      message: "User registered successfully",
-      user,
-    });
-  } catch (error) {
-    res.status(400).json({
-      message: error.message,
-    });
+  if (
+    typeof name !== "string" ||
+    typeof email !== "string" ||
+    typeof password !== "string"
+  ) {
+    const error = new Error(
+      "Name, email and password are required"
+    );
+    error.statusCode = 400;
+    throw error;
   }
+
+  const trimmedName = name.trim();
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (!trimmedName || !normalizedEmail || !password) {
+    const error = new Error(
+      "Name, email and password are required"
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailRegex.test(normalizedEmail)) {
+    const error = new Error("Please provide a valid email address");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (password.length < 8) {
+    const error = new Error(
+      "Password must be at least 8 characters"
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const user = await registerUser(
+    trimmedName,
+    normalizedEmail,
+    password
+  );
+
+  res.status(201).json({
+    message: "User registered successfully",
+    user,
+  });
 };
 
 const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({
-        message: "Email and password are required",
-      });
-    }
-
-    const result = await loginUser(email, password);
-
-    res.status(200).json({
-      message: "Login successful",
-      ...result,
-    });
-  } catch (error) {
-    res.status(401).json({
-      message: error.message,
-    });
+  if (
+    typeof email !== "string" ||
+    typeof password !== "string" ||
+    !email.trim() ||
+    !password
+  ) {
+    const error = new Error("Email and password are required");
+    error.statusCode = 400;
+    throw error;
   }
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const result = await loginUser(normalizedEmail, password);
+
+  res.status(200).json({
+    message: "Login successful",
+    ...result,
+  });
 };
 
 const getMe = async (req, res) => {
-  try {
-    const User = require("../models/User");
+  const user = await User.findById(req.user).select("-password");
 
-    const user = await User.findById(req.user).select("-password");
-
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
-
-    res.status(200).json({
-      user,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Server error",
-    });
+  if (!user) {
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
   }
+
+  res.status(200).json({
+    user,
+  });
 };
 
 const updateProfile = async (req, res) => {
-  try {
-    const { name, email } = req.body;
+  const { name, email } = req.body;
 
-    if (!name || !email) {
-      return res.status(400).json({
-        message: "Name and email are required",
-      });
-    }
-
-    const User = require("../models/User");
-
-    const existingUser = await User.findOne({
-      email,
-      _id: { $ne: req.user },
-    });
-
-    if (existingUser) {
-      return res.status(400).json({
-        message: "Email is already in use",
-      });
-    }
-
-    const user = await User.findById(req.user);
-
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
-
-    user.name = name.trim();
-    user.email = email.trim().toLowerCase();
-
-    await user.save();
-
-    res.status(200).json({
-      message: "Profile updated successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Server error",
-    });
+  if (typeof name !== "string" || typeof email !== "string") {
+    const error = new Error("Name and email are required");
+    error.statusCode = 400;
+    throw error;
   }
+
+  const trimmedName = name.trim();
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (!trimmedName || !normalizedEmail) {
+    const error = new Error("Name and email are required");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailRegex.test(normalizedEmail)) {
+    const error = new Error("Please provide a valid email address");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const existingUser = await User.findOne({
+    email: normalizedEmail,
+    _id: { $ne: req.user },
+  });
+
+  if (existingUser) {
+    const error = new Error("Email is already in use");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const user = await User.findById(req.user);
+
+  if (!user) {
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  user.name = trimmedName;
+  user.email = normalizedEmail;
+
+  await user.save();
+
+  res.status(200).json({
+    message: "Profile updated successfully",
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+    },
+  });
 };
 
 const updatePassword = async (req, res) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
-    
-    if (
-      typeof currentPassword !== "string" ||
-      typeof newPassword !== "string"
-    ) {
-      return res.status(400).json({
-        message: "Current password and new password are required",
-      });
-    }
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({
-        message: "Current password and new password are required",
-      });
-    }
+  const { currentPassword, newPassword } = req.body;
 
-    if (newPassword.length < 8) {
-      return res.status(400).json({
-        message: "New password must be at least 8 characters",
-      });
-    }
-
-    const user = await User.findById(req.user);
-
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
-
-    const isCurrentPasswordValid = await bcrypt.compare(
-      currentPassword,
-      user.password
+  if (
+    typeof currentPassword !== "string" ||
+    typeof newPassword !== "string" ||
+    !currentPassword ||
+    !newPassword
+  ) {
+    const error = new Error(
+      "Current password and new password are required"
     );
-
-    if (!isCurrentPasswordValid) {
-      return res.status(400).json({
-        message: "Current password is incorrect",
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    user.password = hashedPassword;
-
-    await user.save();
-
-    res.status(200).json({
-      message: "Password updated successfully",
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Server error",
-    });
+    error.statusCode = 400;
+    throw error;
   }
+
+  if (newPassword.length < 8) {
+    const error = new Error(
+      "New password must be at least 8 characters"
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const user = await User.findById(req.user);
+
+  if (!user) {
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const isCurrentPasswordValid = await bcrypt.compare(
+    currentPassword,
+    user.password
+  );
+
+  if (!isCurrentPasswordValid) {
+    const error = new Error("Current password is incorrect");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  user.password = hashedPassword;
+
+  await user.save();
+
+  res.status(200).json({
+    message: "Password updated successfully",
+  });
 };
 
 const uploadProfileImage = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({
-        message: "Please select an image",
-      });
-    }
-
-    const user = await User.findById(req.user);
-
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
-
-    user.profileImage = `/uploads/profile/${req.file.filename}`;
-
-    await user.save();
-
-    res.status(200).json({
-      message: "Profile image updated successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        profileImage: user.profileImage,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Failed to upload profile image",
-    });
+  if (!req.file) {
+    const error = new Error("Please select an image");
+    error.statusCode = 400;
+    throw error;
   }
+
+  const user = await User.findById(req.user);
+
+  if (!user) {
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  user.profileImage = `/uploads/profile/${req.file.filename}`;
+
+  await user.save();
+
+  res.status(200).json({
+    message: "Profile image updated successfully",
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      profileImage: user.profileImage,
+    },
+  });
 };
 
 module.exports = {
