@@ -1,0 +1,35 @@
+import { render, screen, fireEvent } from "@testing-library/react"; import { MemoryRouter, useLocation } from "react-router-dom"; import Sidebar from "./Sidebar"; 
+const mockNavigate = jest.fn(); 
+
+jest.mock("react-router-dom", () => {
+  const actual = jest.requireActual("react-router-dom");
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+}); 
+        const renderSidebar = (activeTab = "dashboard", onTabChange = jest.fn()) => 
+            { 
+                return render( <MemoryRouter initialEntries={["/dashboard"]}> 
+                
+                <Sidebar activeTab={activeTab} onTabChange={onTabChange} /> 
+                
+                </MemoryRouter> ); }; 
+                
+                describe("Sidebar", () => { 
+                    
+                    beforeEach(() => { jest.clearAllMocks(); localStorage.clear(); }); 
+                    
+                    test("renders the Jot logo and navigation items", () => { renderSidebar(); 
+                        expect(screen.getByText("Jot")).toBeInTheDocument(); 
+                        expect(screen.getByText("Workspace")).toBeInTheDocument(); 
+                        expect(screen.getByRole("button", { name: "Dashboard" })).toBeInTheDocument(); 
+                        expect(screen.getByRole("button", { name: "All Notes" })).toBeInTheDocument(); 
+                        expect(screen.getByRole("button", { name: "Favorites" })).toBeInTheDocument(); 
+                        expect(screen.getByRole("button", { name: "Shared" })).toBeInTheDocument(); 
+                        expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument(); 
+                        expect(screen.getByRole("button", { name: "Logout" })).toBeInTheDocument(); }); 
+                        test("marks Dashboard as active on the dashboard route", () => { renderSidebar(); 
+                            expect(screen.getByRole("button", { name: "Dashboard" })).toHaveClass( "active" ); }); 
+                            test("navigates to Dashboard when Dashboard is clicked", () => { 
+                                const onTabChange = jest.fn(); renderSidebar("dashboard", onTabChange); fireEvent.click(screen.getByRole("button", { name: "Dashboard" })); expect(onTabChange).toHaveBeenCalledWith("dashboard"); expect(mockNavigate).toHaveBeenCalledWith("/dashboard"); }); test("navigates to All Notes when All Notes is clicked", () => { const onTabChange = jest.fn(); renderSidebar("all", onTabChange); fireEvent.click(screen.getByRole("button", { name: "All Notes" })); expect(onTabChange).toHaveBeenCalledWith("all"); expect(mockNavigate).toHaveBeenCalledWith("/dashboard/all"); }); test("navigates to Favorites when Favorites is clicked", () => { const onTabChange = jest.fn(); renderSidebar("favorites", onTabChange); fireEvent.click(screen.getByRole("button", { name: "Favorites" })); expect(onTabChange).toHaveBeenCalledWith("favorites"); expect(mockNavigate).toHaveBeenCalledWith("/dashboard/favorites"); }); test("navigates to Shared when Shared is clicked", () => { const onTabChange = jest.fn(); renderSidebar("shared", onTabChange); fireEvent.click(screen.getByRole("button", { name: "Shared" })); expect(onTabChange).toHaveBeenCalledWith("shared"); expect(mockNavigate).toHaveBeenCalledWith("/shared"); }); test("navigates to Settings when Settings is clicked", () => { const onTabChange = jest.fn(); renderSidebar("settings", onTabChange); fireEvent.click(screen.getByRole("button", { name: "Settings" })); expect(onTabChange).toHaveBeenCalledWith("settings"); expect(mockNavigate).toHaveBeenCalledWith("/settings"); }); test("calls onTabChange when a navigation item is clicked", () => { const onTabChange = jest.fn(); renderSidebar("dashboard", onTabChange); fireEvent.click(screen.getByRole("button", { name: "Favorites" })); expect(onTabChange).toHaveBeenCalledTimes(1); expect(onTabChange).toHaveBeenCalledWith("favorites"); }); test("logs the user out and navigates to login", () => { localStorage.setItem("token", "test-token"); localStorage.setItem( "user", JSON.stringify({ name: "Test User", email: "test@example.com" }) ); renderSidebar(); fireEvent.click(screen.getByRole("button", { name: "Logout" })); expect(localStorage.getItem("token")).toBeNull(); expect(localStorage.getItem("user")).toBeNull(); expect(mockNavigate).toHaveBeenCalledWith("/login"); }); test("opens the mobile navigation menu", () => { renderSidebar(); expect( screen.queryByRole("button", { name: "Close navigation menu" }) ).not.toBeInTheDocument(); fireEvent.click( screen.getByRole("button", { name: "Open navigation menu" }) ); expect(screen.getByText("Menu")).toBeInTheDocument(); expect( screen.getByRole("button", { name: "Close navigation menu" }) ).toBeInTheDocument(); }); test("closes the mobile navigation menu with the close button", () => { renderSidebar(); fireEvent.click( screen.getByRole("button", { name: "Open navigation menu" }) ); expect(screen.getByText("Menu")).toBeInTheDocument(); fireEvent.click( screen.getByRole("button", { name: "Close navigation menu" }) ); expect(screen.queryByText("Menu")).not.toBeInTheDocument(); }); test("closes the mobile navigation menu when the overlay is clicked", () => { renderSidebar(); fireEvent.click( screen.getByRole("button", { name: "Open navigation menu" }) ); expect(screen.getByText("Menu")).toBeInTheDocument(); const overlay = document.querySelector(".mobile-menu-overlay"); fireEvent.click(overlay); expect(screen.queryByText("Menu")).not.toBeInTheDocument(); }); test("does not close the mobile menu when clicking inside the drawer", () => { renderSidebar(); fireEvent.click( screen.getByRole("button", { name: "Open navigation menu" }) ); const drawer = document.querySelector(".mobile-menu-drawer"); fireEvent.click(drawer); expect(screen.getByText("Menu")).toBeInTheDocument(); }); test("closes mobile menu after selecting a mobile navigation item", () => { const onTabChange = jest.fn(); renderSidebar("dashboard", onTabChange); fireEvent.click( screen.getByRole("button", { name: "Open navigation menu" }) ); const mobileMenu = document.querySelector(".mobile-menu-nav"); const favoritesButton = Array.from( mobileMenu.querySelectorAll("button") ).find((button) => button.textContent.includes("Favorites")); fireEvent.click(favoritesButton); expect(onTabChange).toHaveBeenCalledWith("favorites"); expect(mockNavigate).toHaveBeenCalledWith("/dashboard/favorites"); expect(screen.queryByText("Menu")).not.toBeInTheDocument(); }); test("supports navigation without an onTabChange callback", () => { render( <MemoryRouter initialEntries={["/dashboard"]}> <Sidebar activeTab="dashboard" /> </MemoryRouter> ); expect(() => { fireEvent.click(screen.getByRole("button", { name: "Settings" })); }).not.toThrow(); expect(mockNavigate).toHaveBeenCalledWith("/settings"); }); });

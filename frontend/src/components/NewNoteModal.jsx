@@ -184,7 +184,7 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
     setImagePreview(URL.createObjectURL(file));
 
     if(note?.image){
-      setRemoveImage(true);
+      setRemoveImage(true)
     }
   };
 

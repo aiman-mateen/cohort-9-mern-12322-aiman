@@ -37,6 +37,7 @@ const Topbar = ({ searchQuery, onSearchChange, darkMode, onToggleTheme }) => {
           className="icon-button"
           onClick={onToggleTheme}
           title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+          aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
         >
           {darkMode ? "☀️" : "🌙"}
         </button>
