@@ -3,7 +3,7 @@ const logger = require("../config/logger");
 const errorHandler = (err, req, res, next) => {
   logger.error(
     {
-      error: err,
+      err,
       method: req.method,
       url: req.originalUrl,
     },

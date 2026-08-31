@@ -229,11 +229,13 @@ const deleteNote = async (req, res) => {
 const shareNote = async (req, res) => {
   const { email } = req.body;
 
-  if (!email) {
+  if (typeof email !== "string" || !email.trim()) {
     const error = new Error("Please provide the email address.");
     error.statusCode = 400;
     throw error;
   }
+
+const normalizedEmail = email.trim().toLowerCase();
 
   const note = await Note.findOne({
     _id: req.params.id,
@@ -247,7 +249,7 @@ const shareNote = async (req, res) => {
   }
 
   const userToShareWith = await User.findOne({
-    email: email.toLowerCase().trim(),
+    email: normalizedEmail,
   });
 
   if (!userToShareWith) {
