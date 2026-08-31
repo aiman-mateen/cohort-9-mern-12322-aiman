@@ -1,4 +1,7 @@
-const API_URL = "http://localhost:5000/api/notes";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+const API_URL = `${API_BASE_URL}/api/notes`;
 
 // Custom error so callers can distinguish network failures,
 // expired sessions (401), and generic server errors without
@@ -61,14 +64,15 @@ export const getNotes = async (token) => {
   return data.notes;
 };
 
-export const createNote = async (noteData, token) => {
+export const createNote = async (noteData) => {
+  const token = localStorage.getItem("token");
+
   const data = await request(API_URL, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(noteData),
+    body: noteData,
   });
 
   return data.note;
@@ -85,15 +89,53 @@ export const deleteNote = async (noteId, token) => {
   return data;
 };
 
-export const updateNote = async (noteId, noteData, token) => {
-  const data = await request(`${API_URL}/${noteId}`, {
+export const updateNote = async (id, noteData) => {
+  const token = localStorage.getItem("token");
+
+  const isFormData = noteData instanceof FormData;
+
+  const data = await request(`${API_URL}/${id}`, {
     method: "PUT",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
+      ...(isFormData
+        ? {}
+        : {
+            "Content-Type": "application/json",
+          }),
     },
-    body: JSON.stringify(noteData),
+    body: isFormData
+      ? noteData
+      : JSON.stringify(noteData),
   });
 
   return data.note;
+};
+
+
+
+export const shareNote = async (noteId, email) => {
+  const token = localStorage.getItem("token");
+
+  return await request(`${API_URL}/${noteId}/share`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email }),
+  });
+};
+
+export const getSharedNotes = async () => {
+  const token = localStorage.getItem("token");
+
+  const data = await request(`${API_URL}/shared`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return data.notes;
 };

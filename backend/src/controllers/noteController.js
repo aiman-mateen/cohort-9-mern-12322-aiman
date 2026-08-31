@@ -1,6 +1,8 @@
 const Note = require("../models/Note");
+const User = require("../models/User");
 const sanitizeHtml = require("sanitize-html");
-
+const fs = require("fs");
+const path = require("path");
 
 const sanitizeNoteContent = (content) =>
   sanitizeHtml(content, {
@@ -53,6 +55,7 @@ const createNote = async (req, res) => {
       content: sanitizeNoteContent(content),
       category,
       isFavorite,
+      image: req.file ? `/uploads/notes/${req.file.filename}` : "",
       user: req.user,
     });
 
@@ -140,7 +143,29 @@ const updateNote = async (req, res) => {
       note.isFavorite = isFavorite;
     }
 
-    await note.save();
+    const oldImage = note.image;
+
+if (req.body.removeImage === "true" && note.image) {
+  note.image = "";
+}
+
+if (req.file) {
+  note.image = `/uploads/notes/${req.file.filename}`;
+}
+
+await note.save();
+
+if (oldImage && (req.file || req.body.removeImage === "true")) {
+  const imagePath = path.join(
+    __dirname,
+    "../..",
+    oldImage
+  );
+
+  if (fs.existsSync(imagePath)) {
+    fs.unlinkSync(imagePath);
+  }
+}
 
     res.status(200).json({
       message: "Note updated successfully",
@@ -179,10 +204,102 @@ const deleteNote = async (req, res) => {
   }
 };
 
+const shareNote = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        message: "Please provide the email address.",
+      });
+    }
+
+    const note = await Note.findOne({
+      _id: req.params.id,
+      user: req.user,
+    });
+
+    if (!note) {
+      return res.status(404).json({
+        message: "Note not found.",
+      });
+    }
+
+    const userToShareWith = await User.findOne({
+      email: email.toLowerCase().trim(),
+    });
+
+    if (!userToShareWith) {
+      return res.status(404).json({
+        message: "No user found with that email address.",
+      });
+    }
+
+    if (userToShareWith._id.equals(req.user)) {
+      return res.status(400).json({
+        message: "You cannot share a note with yourself.",
+      });
+    }
+
+    const alreadyShared = note.sharedWith.some((userId) =>
+      userId.equals(userToShareWith._id)
+    );
+
+    if (alreadyShared) {
+      return res.status(400).json({
+        message: "This note is already shared with this user.",
+      });
+    }
+
+    note.sharedWith.push(userToShareWith._id);
+
+    await note.save();
+
+    const updatedNote = await Note.findById(note._id)
+      .populate("user", "name email")
+      .populate("sharedWith", "name email");
+
+    res.status(200).json({
+      message: "Note shared successfully.",
+      note: updatedNote,
+    });
+  } catch (error) {
+    console.error("Share note error:", error);
+
+    res.status(500).json({
+      message: "Failed to share note.",
+    });
+  }
+};
+
+const getSharedNotes = async (req, res) => {
+  try {
+    const notes = await Note.find({
+      sharedWith: req.user,
+    })
+      .populate("user", "name email")
+      .populate("sharedWith", "name email")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      notes,
+    });
+  } catch (error) {
+    console.error("Get shared notes error:", error);
+
+    res.status(500).json({
+      message: "Failed to fetch shared notes.",
+    });
+  }
+};
+
+
 module.exports = {
   createNote,
   getNotes,
   getNote,
   updateNote,
   deleteNote,
+  shareNote,
+  getSharedNotes,
 };

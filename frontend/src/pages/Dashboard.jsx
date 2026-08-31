@@ -6,22 +6,25 @@ import Topbar from "../components/Topbar";
 import NoteCard from "../components/NoteCard";
 import Toast from "../components/Toast";
 import { useEffect, useRef, useState } from "react";
-import { createNote, deleteNote, getNotes, updateNote } from "../services/noteService";
+import { createNote, deleteNote, getNotes, updateNote, shareNote, getSharedNotes } from "../services/noteService";
 import NewNoteModal from "../components/NewNoteModal";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
 import NoteCardSkeleton from "../components/NoteCardSkeleton";
-
-
+import { Share2 } from "lucide-react";
+import ShareNoteModal from "../components/ShareNoteModal";
 
 function Dashboard() {
+    // console.log("DASHBOARD IS RENDERING", location.pathname);
+    // alert("Dashboard.jsx is running");
     const [user, setUser] = useState(null);
     const [notes, setNotes] = useState([]);
+    // const [sharedNotes, setSharedNotes] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const location = useLocation();
     const navigate = useNavigate();
     const currentPath = location.pathname;
-    const isSharedPage = currentPath === "/dashboard/shared";
-    const isSettingsPage = currentPath === "/dashboard/settings"; 
+    // const isSharedPage = currentPath === "/dashboard/shared";
+    // const isSettingsPage = currentPath === "/dashboard/settings"; 
     const [activeTab, setActiveTab] = useState("dashboard");
     const [sortOption, setSortOption] = useState("newest");
     const [isSortOpen, setIsSortOpen] = useState(false);
@@ -34,6 +37,7 @@ function Dashboard() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [noteToDelete, setNoteToDelete] = useState(null);
     const [toast, setToast] = useState(null);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [darkMode, setDarkMode] = useState(
       localStorage.getItem("theme") === "dark"
     );
@@ -127,6 +131,33 @@ function Dashboard() {
     
     fetchNotes();
   }, []);
+
+
+  // useEffect(() => {
+  //   if (!isSharedPage) {
+  //     return;
+  //   }
+
+  //   const fetchSharedNotes = async () => {
+  //     const token = localStorage.getItem("token");
+
+  //     if (!token) {
+  //       setError("You are not logged in.");
+  //       return;
+  //     }
+
+  //     try {
+  //       const data = await getSharedNotes(token);
+  //       console.log("shared notes from api:" , data)
+  //       setSharedNotes(data);
+  //       setError("");
+  //     } catch (error) {
+  //       setError(error.message);
+  //     }
+  //   };
+
+  //   fetchSharedNotes();
+  // }, [isSharedPage]);
 
 useEffect(() => {
   document.documentElement.setAttribute(
@@ -375,6 +406,36 @@ const handleUpdateNote = async (noteData) => {
   }
 };
 
+const handleShareNote = async (email) => {
+  if (!selectedNote) {
+    return;
+  }
+
+  try {
+    const data = await shareNote(selectedNote._id, email);
+
+    setSelectedNote(data.note);
+
+    setNotes((currentNotes) =>
+      currentNotes.map((note) =>
+        note._id === data.note._id ? data.note : note
+      )
+    );
+
+    setIsShareModalOpen(false);
+
+    setToast({
+      type: "success",
+      message: "Note shared successfully",
+    });
+  } catch (error) {
+    setToast({
+      type: "error",
+      message: error.message,
+    });
+  }
+};
+
 const handleDeleteNote = (noteId) => {
   setNoteToDelete(noteId);
   setIsDeleteModalOpen(true);
@@ -457,6 +518,15 @@ const confirmDeleteNote = async () => {
 
                 <button
                   type="button"
+                  className="note-share-button"
+                  onClick={() => setIsShareModalOpen(true)}
+                >
+                  <Share2 size={15} />
+                  Share
+                </button>
+
+                <button
+                  type="button"
                   className="note-edit-button"
                   onClick={() => handleEditNote(selectedNote)}
                 >
@@ -497,9 +567,21 @@ const confirmDeleteNote = async () => {
             </div>
 
             <div
-              className="opened-note-content"  onClick={handleToggleTask}
+              className="opened-note-content"
+              onClick={handleToggleTask}>
+            <div 
               dangerouslySetInnerHTML={{ __html: selectedNote.content }}
             />
+
+            {selectedNote.image && (
+              <div className="opened-note-image">
+                <img
+                  src={`http://localhost:5000${selectedNote.image}`}
+                  alt={selectedNote.title}
+                />
+              </div>
+            )}
+            </div>
 
             <div className="other-notes-section">
               <div className="notes-section-header">
@@ -528,27 +610,57 @@ const confirmDeleteNote = async () => {
               </div>
             </div>
           </section>
-        ) : isSharedPage ? (
-            <section className="placeholder-page">
-              <div className="placeholder-page-content">
-                <Users size={32} />
-                <h1>Shared Notes</h1>
-                <p>
-                  Notes shared with you will appear here.
-                </p>
-              </div>
-            </section>
-          ) : isSettingsPage ? (
-            <section className="placeholder-page">
-              <div className="placeholder-page-content">
-                <Settings size={32} />
-                <h1>Settings</h1>
-                <p>
-                  Account and application settings will appear here.
-                </p>
-              </div>
-            </section>
-          ) : (
+        // ) : isSharedPage ? (
+        //       <section className="notes-section">
+        //         <div className="notes-section-header">
+        //           <div>
+        //             <p className="dashboard-eyebrow">Shared with you</p>
+        //             <h2>Shared Notes</h2>
+        //           </div>
+
+        //           <span className="notes-count">
+        //             {sharedNotes.length}{" "}
+        //             {sharedNotes.length === 1 ? "note" : "notes"}
+        //           </span>
+        //         </div>
+
+        //         {sharedNotes.length === 0 ? (
+        //           <div className="notes-state">
+        //             <Users size={32} />
+        //             <p>No notes have been shared with you yet.</p>
+        //           </div>
+        //         ) : (
+        //           <div className="notes-grid">
+        //             {sharedNotes.map((note) => (
+        //               <NoteCard
+        //                 key={note._id}
+        //                 title={note.title}
+        //                 content={note.content}
+        //                 date={new Date(note.createdAt).toLocaleString([], {
+        //                   dateStyle: "medium",
+        //                   timeStyle: "short",
+        //                 })}
+        //                 category={note.category || "Personal"}
+        //                 isFavorite={note.isFavorite}
+        //                 onOpen={() => handleOpenNote(note)}
+        //                 image={note.image}
+        //               />
+        //             ))}
+        //           </div>
+        //         )}
+        //       </section>
+        //     ) : isSettingsPage ? (
+        //     <section className="placeholder-page">
+        //       <div className="placeholder-page-content">
+        //         <Settings size={32} />
+        //         <h1>Settings</h1>
+        //         <p>
+        //           Account and application settings will appear here.
+        //         </p>
+        //       </div>
+        //     </section>
+        //   ) : (
+      ) : (
         <>
         <section className="dashboard-header">
           <div>
@@ -774,6 +886,7 @@ const confirmDeleteNote = async () => {
                     onEdit={() => handleEditNote(note)}
                     onOpen={() => handleOpenNote(note)}
                     onFavorite={() => handleFavoriteNote(note)}
+                    image={note.image}
                   />
                 ))}
               </div>
@@ -817,6 +930,14 @@ const confirmDeleteNote = async () => {
           type={toast.type}
           message={toast.message}
           onClose={() => setToast(null)}
+        />
+      )}
+
+      {isShareModalOpen && selectedNote && (
+        <ShareNoteModal
+          note={selectedNote}
+          onClose={() => setIsShareModalOpen(false)}
+          onShare={handleShareNote}
         />
       )}
 

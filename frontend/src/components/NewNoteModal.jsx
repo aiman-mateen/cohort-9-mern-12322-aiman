@@ -1,4 +1,11 @@
-import { ChevronDown, X, List, ListOrdered, ListChecks } from "lucide-react";
+import {
+  ChevronDown,
+  X,
+  List,
+  ListOrdered,
+  ListChecks,
+  ImagePlus,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -8,11 +15,17 @@ import TaskItem from "@tiptap/extension-task-item";
 const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
   const [title, setTitle] = useState(note?.title || "");
   const [category, setCategory] = useState(note?.category || "Personal");
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(note?.image || "");
+  const [imageError, setImageError] = useState("");
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [removeImage, setRemoveImage] = useState(false);
   const [errors, setErrors] = useState({
     title: "",
     content: "",
   });
+  const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -62,6 +75,14 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
     setTitle(note?.title || "");
     setCategory(note?.category || "Personal");
     setCategoryOpen(false);
+    setImage(null);
+    setImagePreview(
+      note?.image
+        ? `${API_URL}${note.image}`
+        : ""
+    );
+    setImageError("");
+    setRemoveImage(false);
 
     if (editor) {
       editor.commands.setContent(note?.content || "");
@@ -127,6 +148,46 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
     setCategoryOpen(false);
   };
 
+
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+
+    if (!file) {
+      return;
+    }
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      setImageError("Only JPG, JPEG, PNG and WEBP images are allowed.");
+      setImage(null);
+      setImagePreview("");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setImageError("Image size must be less than 2MB.");
+      setImage(null);
+      setImagePreview("");
+      event.target.value = "";
+      return;
+    }
+
+    setImage(file);
+    setImageError("");
+    setImagePreview(URL.createObjectURL(file));
+
+    if(note?.image){
+      setRemoveImage(true);
+    }
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
 
@@ -156,11 +217,21 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
       content: "",
     });
 
-    onCreate({
-      title: title.trim(),
-      content,
-      category,
-    });
+   const formData = new FormData();
+
+    formData.append("title", title.trim());
+    formData.append("content", content);
+    formData.append("category", category);
+
+    if (image) {
+      formData.append("image", image);
+    }
+
+    if (removeImage) {
+      formData.append("removeImage", "true");
+    }
+
+    onCreate(formData);
   };
 
   return (
@@ -366,7 +437,48 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
             )}
           </div>
           
+            <div className="form-group note-image-group">
+  <label htmlFor="note-image">Image</label>
 
+  <label htmlFor="note-image" className="image-upload-button">
+    <ImagePlus size={17} />
+    {imagePreview ? "Replace Image" : "Add Image"}
+  </label>
+
+  <input
+    id="note-image"
+    type="file"
+    accept="image/jpeg,image/jpg,image/png,image/webp"
+    onChange={handleImageChange}
+    hidden
+  />
+
+  {imageError && (
+    <p className="form-error" role="alert">
+      {imageError}
+    </p>
+  )}
+
+  {imagePreview && (
+    <div className="note-image-preview">
+      <img src={imagePreview} alt="Note preview" />
+
+      <button
+        type="button"
+        className="image-remove-button"
+        onClick={() => {
+          setImage(null);
+          setImagePreview("");
+          setImageError("");
+          setRemoveImage(true);
+        }}
+      >
+        <X size={15} />
+        Remove Image
+      </button>
+    </div>
+  )}
+</div>
           
 
           <div className="modal-actions">

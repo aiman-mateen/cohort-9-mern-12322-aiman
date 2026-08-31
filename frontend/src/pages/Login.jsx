@@ -69,7 +69,7 @@ const Login = () => {
 
               
               <div className="input-wrapper password-wrapper">
-  <LockKeyhole size={17} />
+            <LockKeyhole size={17} />
 
             <input
                 id="password"
