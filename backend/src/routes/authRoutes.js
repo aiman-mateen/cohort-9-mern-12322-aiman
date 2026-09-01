@@ -12,18 +12,19 @@ const {
 
 const protect = require("../middleware/authMiddleware");
 const upload = require("../middleware/uploadMiddleware");
+const asyncHandler = require("../middleware/asyncHandler");
 
 const router = express.Router();
 
-router.post("/register", register);
+router.post("/register", asyncHandler(register));
 
-router.post("/login", login);
+router.post("/login", asyncHandler(login));
 
-router.get("/me", protect, getMe);
+router.get("/me", protect, asyncHandler(getMe));
 
-router.put("/profile", protect, updateProfile);
+router.put("/profile", protect, asyncHandler(updateProfile));
 
-router.put("/password", protect, updatePassword);
+router.put("/password", protect, asyncHandler(updatePassword));
 
 router.put(
   "/profile-image",
@@ -51,7 +52,7 @@ router.put(
       next();
     });
   },
-  uploadProfileImage
+  asyncHandler(uploadProfileImage)
 );
 
 module.exports = router;
