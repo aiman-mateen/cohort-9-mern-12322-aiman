@@ -19,10 +19,7 @@ const Shared = () => {
   );
 
   useEffect(() => {
-  document.documentElement.setAttribute(
-    "data-theme",
-    darkMode ? "dark" : "light"
-  );
+  document.documentElement.dataset.theme = darkMode ? "dark" : "light";
 
   localStorage.setItem(
     "theme",
@@ -36,33 +33,27 @@ const Shared = () => {
   const toggleTheme = () => {
     setDarkMode((prev) => !prev);};
 
-  useEffect(() => {
-    const fetchSharedNotes = async () => {
-      const token = localStorage.getItem("token");
+  const fetchSharedNotes = async () => {
+  const token = localStorage.getItem("token");
 
-      if (!token) {
-        return;
-      }
+  if (!token) {
+    return;
+  }
 
-      try {
-        const data = await getSharedNotes(token);
+  try {
+    const data = await getSharedNotes(token);
+    console.log("SHARED NOTES FOR CURRENT USER:", data);
+    setSharedNotes(data);
+    setError("");
+  } catch (fetchError) {
+    console.error("Failed to fetch shared notes:", fetchError);
+    setError("Failed to load shared notes. Please try again.");
+  }
+};
 
-        console.log(
-          "SHARED NOTES FOR CURRENT USER:",
-          data
-        );
-
-        setSharedNotes(data);
-      } catch (error) {
-        console.error(
-          "Failed to fetch shared notes:",
-          error
-        );
-      }
-    };
-
-    fetchSharedNotes();
-  }, []);
+useEffect(() => {
+  fetchSharedNotes();
+}, []);
 
   const handleOpenNote = (note) => {
     setSelectedNote(note);
@@ -85,6 +76,74 @@ const Shared = () => {
     );
   });
 
+  const getUpdatedTime = () => {
+  const updatedTime = new Date(selectedNote.updatedAt).getTime();
+  const createdTime = new Date(selectedNote.createdAt).getTime();
+
+  if (updatedTime > createdTime) {
+    return new Date(selectedNote.updatedAt).toLocaleString([], {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  }
+
+  return "Not edited yet";
+};
+
+const renderSharedNotesContent = () => {
+  if (error) {
+    return (
+      <div className="notes-state">
+        <p>{error}</p>
+        <button
+          type="button"
+          className="modal-create"
+          onClick={fetchSharedNotes}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (filteredSharedNotes.length === 0) {
+    return (
+      <div className="shared-empty-state">
+        <div className="shared-empty-icon">
+          <Users size={32} />
+        </div>
+        <h3>No shared notes yet</h3>
+        <p>
+          Notes that are shared with you will appear here.
+        </p>
+        <span>
+          You don't have any shared notes at the moment.
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="notes-grid">
+      {filteredSharedNotes.map((note) => (
+        <NoteCard
+          key={note._id}
+          title={note.title}
+          content={note.content}
+          date={new Date(note.createdAt).toLocaleString([], {
+            dateStyle: "medium",
+            timeStyle: "short",
+          })}
+          category={note.category || "Personal"}
+          isFavorite={note.isFavorite}
+          image={note.image}
+          onOpen={() => handleOpenNote(note)}
+          readOnly={true}
+        />
+      ))}
+    </div>
+  );
+};
   return (
     <div className="app">
       <Sidebar />
@@ -134,21 +193,9 @@ const Shared = () => {
               </span>
 
               <span>
-                Updated at:{" "}
-                {new Date(
-                  selectedNote.updatedAt
-                ).getTime() >
-                new Date(
-                  selectedNote.createdAt
-                ).getTime()
-                  ? new Date(
-                      selectedNote.updatedAt
-                    ).toLocaleString([], {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    })
-                  : "Not edited yet"}
-              </span>
+  Updated at:{" "}
+  {getUpdatedTime()}
+</span>
             </div>
 
             <div className="opened-note-content">
@@ -189,57 +236,7 @@ const Shared = () => {
               </div>
             </div>
 
-            {error ? (
-  <div className="notes-state">
-    <p>{error}</p>
-    <button
-      type="button"
-      className="modal-create"
-      onClick={fetchSharedNotes}
-    >
-      Retry
-    </button>
-  </div>
-) : filteredSharedNotes.length === 0 ? (
-              <div className="shared-empty-state">
-                <div className="shared-empty-icon">
-                  <Users size={32} />
-                </div>
-
-                <h3>No shared notes yet</h3>
-
-                <p>
-                  Notes that are shared with you will appear here.
-                </p>
-
-                <span>
-                  You don't have any shared notes at the moment.
-                </span>
-              </div>
-            ) : (
-              <div className="notes-grid">
-                {filteredSharedNotes.map((note) => (
-                  <NoteCard
-                    key={note._id}
-                    title={note.title}
-                    content={note.content}
-                    date={new Date(
-                      note.createdAt
-                    ).toLocaleString([], {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    })}
-                    category={note.category || "Personal"}
-                    isFavorite={note.isFavorite}
-                    image={note.image}
-                    onOpen={() =>
-                      handleOpenNote(note)
-                    }
-                    readOnly={true}
-                  />
-                ))}
-              </div>
-            )}
+            {renderSharedNotesContent()}
 
           </section>
         )}

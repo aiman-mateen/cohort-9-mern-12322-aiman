@@ -48,10 +48,7 @@ const isPasswordFormFilled =
 
 
   useEffect(() => {
-  document.documentElement.setAttribute(
-    "data-theme",
-    darkMode ? "dark" : "light"
-  );
+  document.documentElement.dataset.theme = darkMode ? "dark" : "light";
 
   localStorage.setItem("theme", darkMode ? "dark" : "light");
 }, [darkMode]);
@@ -309,7 +306,7 @@ const isPasswordFormFilled =
       type: "success",
       message: "Password updated successfully",
     });
-  } catch (error) {
+  } catch {
     setPasswordErrors({
       current: "Unable to update password. Please try again.",
       new: "",
@@ -384,11 +381,7 @@ const isPasswordFormFilled =
 
               <label className="profile-image-upload">
                 Change Photo
-                <input
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/webp"
-                  onChange={handleImageUpload}
-                />
+                <input type="file" accept="image/jpeg,image/jpg,image/png,image/webp" onChange={handleImageUpload}/>
               </label>
 
               <form className="profile-form" onSubmit={handleSubmit}>
@@ -450,27 +443,27 @@ const isPasswordFormFilled =
                     Current Password
                   </label>
 
-                 <div className="password-input-wrapper">
-                  <input
-                    id="current-password"
-                    type={showCurrentPassword ? "text" : "password"}
-                    value={currentPassword}
-                    onChange={(event) => setCurrentPassword(event.target.value)}
-                  />
+                  <div className="password-input-wrapper">
+                    <input
+                        id="current-password"
+                        type={showCurrentPassword ? "text" : "password"}
+                        value={currentPassword}
+                        onChange={(event) => setCurrentPassword(event.target.value)}
+                      />
 
-                  <button
-                    type="button"
-                    className="password-toggle"
-                    onClick={() => setShowCurrentPassword((prev) => !prev)}
-                    aria-label={
-                      showCurrentPassword
-                        ? "Hide current password"
-                        : "Show current password"
-                    }
-                  >
-                    {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowCurrentPassword((prev) => !prev)}
+                      aria-label={
+                        showCurrentPassword
+                          ? "Hide current password"
+                          : "Show current password"
+                      }
+                    >
+                      {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
 
                 {passwordErrors.current && (
                     <p className="field-error">
@@ -489,13 +482,13 @@ const isPasswordFormFilled =
                       id="new-password"
                       type={showNewPassword ? "text" : "password"}
                       value={newPassword}
-                      onChange={(event) => {
+                     onChange={(event) => {
                         setNewPassword(event.target.value);
                         setPasswordErrors((prev) => ({
-                          ...prev, new: "",
+                          ...prev,
+                          new: "",
                         }));
-                      }
-                      }
+                      }}
                     />
 
                     <button
@@ -529,14 +522,13 @@ const isPasswordFormFilled =
                       id="confirm-password"
                       type={showConfirmPassword ? "text" : "password"}
                       value={confirmPassword}
-                      onChange={(event) => 
-                        {
-                          setConfirmPassword(event.target.value);
-                          setPasswordErrors((prev)=> ({
-                            ...prev, confirm: "",
-                          }));
-                        
-                        }}
+                      onChange={(event) => {
+                        setConfirmPassword(event.target.value);
+                        setPasswordErrors((prev) => ({
+                          ...prev,
+                          confirm: "",
+                        }));
+                      }}
                     />
 
                     <button

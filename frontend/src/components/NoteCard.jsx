@@ -8,18 +8,22 @@ const NoteCard = ({
   isFavorite,
   image,
   onDelete,
-  onEdit,
   onOpen,
+  onEdit,
   onFavorite,
   readOnly = false,
 }) => {
   return (
-    <article className="note-card" onClick={onOpen}>
+   <article
+  className="note-card"
+  onClick={onOpen}
+>
       <div className="note-card-top">
         <span className="note-category">{category}</span>
 
         {!readOnly && (
           <button
+          type="button" 
             className={`favorite-button ${
               isFavorite ? "favorite-active" : ""
             }`}
@@ -61,6 +65,7 @@ const NoteCard = ({
         {!readOnly && (
           <div className="note-actions">
             <button
+              type="button"
               aria-label={`Edit ${title}`}
               title="Edit note"
               onClick={(event) => {
@@ -72,6 +77,7 @@ const NoteCard = ({
             </button>
 
             <button
+            type="button"
               className="delete-button"
               aria-label={`Delete ${title}`}
               title="Delete note"

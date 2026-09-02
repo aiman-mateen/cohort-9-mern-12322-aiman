@@ -2,11 +2,8 @@ import { AlertTriangle, X } from "lucide-react";
 
 const DeleteConfirmModal = ({ onClose, onConfirm }) => {
   return (
-    <div className="modal-overlay" onMouseDown={onClose}>
-      <div
-        className="confirm-modal"
-        onMouseDown={(event) => event.stopPropagation()}
-      >
+   <div className="modal-overlay">
+  <div className="confirm-modal">
         <div className="confirm-icon">
           <AlertTriangle size={20} />
         </div>

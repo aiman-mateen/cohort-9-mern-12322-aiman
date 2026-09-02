@@ -39,13 +39,18 @@ const request = async (url, options) => {
   }
 
   if (!response.ok) {
-    const message =
-      data?.message ||
-      (response.status === 401
-        ? "Your session has expired. Please log in again."
-        : response.status >= 500
-        ? "Something went wrong on our end. Please try again shortly."
-        : "Something went wrong. Please try again.");
+    let message = data?.message;
+
+if (!message) {
+  if (response.status === 401) {
+    message = "Your session has expired. Please log in again.";
+  } else if (response.status >= 500) {
+    message =
+      "Something went wrong on our end. Please try again shortly.";
+  } else {
+    message = "Something went wrong. Please try again.";
+  }
+}
 
     throw new ApiError(message, { status: response.status });
   }

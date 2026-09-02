@@ -1,5 +1,4 @@
 import {
-  ChevronDown,
   X,
   List,
   ListOrdered,
@@ -11,6 +10,47 @@ import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
+const convertTaskListsToBulletLists = (editor) => {
+  const { doc } = editor.state;
+  const taskListNodes = [];
+
+  doc.descendants((node, pos) => {
+    if (node.type.name === "taskList") {
+      taskListNodes.push({ node, pos });
+    }
+  });
+
+  editor.commands.command(({ tr, state }) => {
+    taskListNodes.toReversed().forEach(({ node, pos }) => {
+      const listItems = [];
+
+      node.forEach((taskItem) => {
+        taskItem.forEach((child) => {
+          if (child.type.name === "paragraph") {
+            listItems.push(
+              state.schema.nodes.listItem.create(null, child)
+            );
+          }
+        });
+      });
+
+      if (listItems.length > 0) {
+        const bulletList = state.schema.nodes.bulletList.create(
+          null,
+          listItems
+        );
+
+        tr.replaceWith(
+          pos,
+          pos + node.nodeSize,
+          bulletList
+        );
+      }
+    });
+
+    return true;
+  });
+};
 
 const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
   const [title, setTitle] = useState(note?.title || "");
@@ -18,7 +58,6 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(note?.image || "");
   const [imageError, setImageError] = useState("");
-  const [categoryOpen, setCategoryOpen] = useState(false);
   const [removeImage, setRemoveImage] = useState(false);
   const [errors, setErrors] = useState({
     title: "",
@@ -74,7 +113,6 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
   useEffect(() => {
     setTitle(note?.title || "");
     setCategory(note?.category || "Personal");
-    setCategoryOpen(false);
     setImage(null);
     setImagePreview(
       note?.image
@@ -91,62 +129,16 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
 
   
  const handleCategoryChange = (newCategory) => {
-    // Do nothing to the editor if the user selects the same category.
-    if (newCategory === category) {
-      setCategoryOpen(false);
-      return;
-    }
+  if (newCategory === category) {
+    return;
+  }
 
-    // Only convert checklist → bullet list when the user
-    // explicitly changes FROM To-Do to another category.
-    if (category === "To-Do" && newCategory !== "To-Do" && editor) {
-      const { doc } = editor.state;
-      const taskListNodes = [];
+  if (category === "To-Do" && newCategory !== "To-Do" && editor) {
+    convertTaskListsToBulletLists(editor);
+  }
 
-      doc.descendants((node, pos) => {
-        if (node.type.name === "taskList") {
-          taskListNodes.push({ node, pos });
-        }
-      });
-
-      editor.commands.command(({ tr, state }) => {
-        taskListNodes.reverse().forEach(({ node, pos }) => {
-          const listItems = [];
-
-          node.forEach((taskItem) => {
-            taskItem.forEach((child) => {
-              if (child.type.name === "paragraph") {
-                listItems.push(
-                  state.schema.nodes.listItem.create(
-                    null,
-                    child
-                  )
-                );
-              }
-            });
-          });
-
-          if (listItems.length > 0) {
-            const bulletList = state.schema.nodes.bulletList.create(
-              null,
-              listItems
-            );
-
-            tr.replaceWith(
-              pos,
-              pos + node.nodeSize,
-              bulletList
-            );
-          }
-        });
-
-        return true;
-      });
-    }
-
-    setCategory(newCategory);
-    setCategoryOpen(false);
-  };
+  setCategory(newCategory);
+};
 
 
   const handleImageChange = (event) => {
@@ -201,7 +193,7 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
     }
 
     let content = editor?.getHTML() || "";
-    content = content.replace(/<p><br><\/p>/g, "").trim();
+   content = content.replaceAll("<p><br></p>", "").trim();
 
     if (!content || content === "<p></p>") {
       newErrors.content = "Please enter some content.";
@@ -235,11 +227,8 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
   };
 
   return (
-    <div className="modal-overlay" onMouseDown={onClose}>
-      <div
-        className="note-modal"
-        onMouseDown={(event) => event.stopPropagation()}
-      >
+  <div className="modal-overlay">
+  <div className="note-modal">
         <div className="modal-header">
           <div>
             <h2>{mode === "edit" ? "Edit Note" : "New Note"}</h2>
@@ -293,61 +282,23 @@ const NewNoteModal = ({ onClose, onCreate, note = null, mode = "create" }) => {
 
             <div className="form-group category-group">
               <label htmlFor="note-category">Category</label>
-              <div className="category-dropdown">
-                <button
-                  id="note-category"
-                  type="button"
-                  className={`category-dropdown-button ${
-                    categoryOpen ? "open" : ""
-                  }`}
-                  onClick={() => setCategoryOpen((previous) => !previous)}
-                  aria-haspopup="listbox"
-                  aria-expanded={categoryOpen}
-                >
-                  <span>{category}</span>
-
-                  <ChevronDown
-                    size={17}
-                    className={
-                      categoryOpen
-                        ? "category-chevron rotated"
-                        : "category-chevron"
-                    }
-                  />
-                </button>
-
-                {categoryOpen && (
-                  <div className="category-dropdown-menu" role="listbox">
-                    {["Personal", "Work", "Study", "Ideas", "To-Do", "Reminders"].map(
-                      (option) => (
-                        <button
-                          key={option}
-                          type="button"
-                          className={`category-option ${
-                            category === option ? "selected" : ""
-                          }`}
-                          onClick={() => {
-                            handleCategoryChange(option)
-                          }}
-                          role="option"
-                          aria-selected={category === option}
-                        >
-                          <span>{option}</span>
-
-                          {category === option && (
-                            <span className="category-check">✓</span>
-                          )}
-                        </button>
-                      )
-                    )}
-                  </div>
-                )}
-              </div>
+              <select
+  id="note-category"
+  value={category}
+  onChange={(event) => handleCategoryChange(event.target.value)}
+>
+  <option value="Personal">Personal</option>
+  <option value="Work">Work</option>
+  <option value="Study">Study</option>
+  <option value="Ideas">Ideas</option>
+  <option value="To-Do">To-Do</option>
+  <option value="Reminders">Reminders</option>
+</select>
             </div>
           </div>
 
           <div className="form-group">
-            <label>Content</label>
+            <span className="form-label">Content</span>
 
             <div className="editor-wrapper">
               {editor && (

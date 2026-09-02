@@ -18,10 +18,7 @@ const Settings = () => {
   );
 
   useEffect(() => {
-  document.documentElement.setAttribute(
-    "data-theme",
-    darkMode ? "dark" : "light"
-  );
+  document.documentElement.dataset.theme = darkMode ? "dark" : "light";
 
   localStorage.setItem(
     "theme",

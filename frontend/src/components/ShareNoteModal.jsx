@@ -14,11 +14,8 @@ const ShareNoteModal = ({ note, onClose, onShare }) => {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div
-        className="note-modal share-modal"
-        onClick={(event) => event.stopPropagation()}
-      >
+   <div className="modal-overlay">
+  <div className="note-modal share-modal">
         <div className="modal-header">
           <div>
             <p className="modal-eyebrow">Share note</p>

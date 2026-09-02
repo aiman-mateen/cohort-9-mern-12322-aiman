@@ -41,7 +41,7 @@ const Topbar = ({ searchQuery, onSearchChange, darkMode, onToggleTheme }) => {
         >
           {darkMode ? "☀️" : "🌙"}
         </button>
-        <button className="icon-button" aria-label="Notifications">
+        <button type="button" className="icon-button" aria-label="Notifications">
           <Bell size={18} />
         </button>
 

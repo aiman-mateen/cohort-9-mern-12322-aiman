@@ -2,8 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
 const noteRoutes = require("./routes/noteRoutes");
-const path = require("path");
-const fs = require("fs");
+const path = require("node:path");
+const fs = require("node:fs");
 const uploadsPath = path.join(__dirname, "../uploads");
 const profileUploadsPath = path.join(uploadsPath, "profile");
 const noteUploadsPath = path.join(uploadsPath, "notes");
@@ -15,8 +15,13 @@ fs.mkdirSync(profileUploadsPath, { recursive: true });
 fs.mkdirSync(noteUploadsPath, { recursive: true });
 
 const app = express();
-
-app.use(cors());
+app.disable("x-powered-by");
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(pinoHttp({ logger }));
 
