@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const Note = require("../models/Note");
+
 const asyncHandler = require("../middleware/asyncHandler");
 
 const {
@@ -25,6 +26,7 @@ router.post(
   uploadNoteImage.single("image"),
   asyncHandler(createNote)
 );
+
 router.get(
   "/:id/image",
   protect,
@@ -56,17 +58,21 @@ router.get(
   })
 );
 
-
 router.get("/", protect, asyncHandler(getNotes));
+
 router.get("/shared", protect, asyncHandler(getSharedNotes));
+
 router.post("/:id/share", protect, asyncHandler(shareNote));
+
 router.get("/:id", protect, asyncHandler(getNote));
+
 router.put(
   "/:id",
   protect,
   uploadNoteImage.single("image"),
   asyncHandler(updateNote)
 );
+
 router.delete("/:id", protect, asyncHandler(deleteNote));
 
 module.exports = router;
