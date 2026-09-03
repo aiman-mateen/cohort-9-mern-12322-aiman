@@ -80,7 +80,7 @@ const login = async (req, res) => {
   });
 };
 
-const getMe = async (req, res) => {
+const getMe = async (req, res, next) => {
   const user = await User.findById(req.user).select("-password");
 
   if (!user) {
@@ -94,7 +94,7 @@ const getMe = async (req, res) => {
   });
 };
 
-const updateProfile = async (req, res) => {
+const updateProfile = async (req, res, next) => {
   const { name, email } = req.body;
 
   if (typeof name !== "string" || typeof email !== "string") {
@@ -154,7 +154,7 @@ const updateProfile = async (req, res) => {
   });
 };
 
-const updatePassword = async (req, res) => {
+const updatePassword = async (req, res, next) => {
   const { currentPassword, newPassword } = req.body;
 
   if (
@@ -208,7 +208,7 @@ const updatePassword = async (req, res) => {
   });
 };
 
-const uploadProfileImage = async (req, res) => {
+const uploadProfileImage = async (req, res, next) => {
   if (!req.file) {
     const error = new Error("Please select an image");
     error.statusCode = 400;

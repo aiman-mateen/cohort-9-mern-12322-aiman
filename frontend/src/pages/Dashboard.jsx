@@ -653,7 +653,7 @@ const handleToggleTask = async (event) => {
   }
 
   const newCheckedState =
-    taskItem.dataset.checked === "true";
+    taskItem.dataset.checked !== "true";
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(

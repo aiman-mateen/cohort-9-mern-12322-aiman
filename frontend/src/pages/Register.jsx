@@ -49,8 +49,7 @@ const Register = () => {
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
     } else if (
-  !formData.email.includes("@") ||
-  !formData.email.includes(".")
+  !/\S+@\S+\.\S+/.test(formData.email)
 ) {
       newErrors.email = "Enter a valid email address";
     }

@@ -132,8 +132,8 @@ const Sidebar = ({ activeTab, onTabChange }) => {
       </div>
 
       {isMobileMenuOpen && (
- <div className="mobile-menu-overlay">
-  <div className="mobile-menu-drawer">
+ <div className="mobile-menu-overlay" onClick={() => setIsMobileMenuOpen(false)}>
+  <div className="mobile-menu-drawer" onClick={(event) => event.stopPropagation()}>
             <div className="mobile-menu-header">
               <span>Menu</span>
 

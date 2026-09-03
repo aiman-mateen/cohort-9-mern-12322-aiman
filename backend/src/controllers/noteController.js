@@ -51,7 +51,7 @@ const sanitizeNoteContent = (content) =>
     });
   
 // Create a note
-const createNote = async (req, res) => {
+const createNote = async (req, res, next) => {
   const { title, content, category, isFavorite } = req.body;
 
   if (typeof title !== "string" || typeof content !== "string") {
@@ -97,7 +97,7 @@ const createNote = async (req, res) => {
 };
 
 // Get all notes belonging to logged-in user
-const getNotes = async (req, res) => {
+const getNotes = async (req, res, next) => {
   const notes = await Note.find({ user: req.user }).sort({
     createdAt: -1,
   });
@@ -108,7 +108,7 @@ const getNotes = async (req, res) => {
 };
 
 // Get one note
-const getNote = async (req, res) => {
+const getNote = async (req, res, next) => {
   const note = await Note.findOne({
     _id: req.params.id,
     user: req.user,
@@ -126,7 +126,7 @@ const getNote = async (req, res) => {
 };
 
 // Update a note
-const updateNote = async (req, res) => {
+const updateNote = async (req, res, next) => {
   const { title, content, category, isFavorite } = req.body;
 
   const note = await Note.findOne({
@@ -207,7 +207,7 @@ const updateNote = async (req, res) => {
 };
 
 // Delete a note
-const deleteNote = async (req, res) => {
+const deleteNote = async (req, res, next) => {
   const note = await Note.findOne({
     _id: req.params.id,
     user: req.user,
